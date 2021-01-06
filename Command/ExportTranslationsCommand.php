@@ -38,6 +38,7 @@ class ExportTranslationsCommand extends Command
         $this->container = $container;
     }
 
+
     /**
      * {@inheritdoc}
      */
@@ -82,7 +83,7 @@ class ExportTranslationsCommand extends Command
         $locales = $this->input->getOption('locales') ? explode(',', $this->input->getOption('locales')) : array();
         $domains = $this->input->getOption('domains') ? explode(',', $this->input->getOption('domains')) : array();
 
-        return $this->getContainer()
+        return $this->container
             ->get('lexik_translation.translation_storage')
             ->getFilesByLocalesAndDomains($locales, $domains);
     }
@@ -94,7 +95,7 @@ class ExportTranslationsCommand extends Command
      */
     protected function exportFile(FileInterface $file)
     {
-        $rootDir = $this->input->getOption('export-path') ? $this->input->getOption('export-path') . '/' : $this->getContainer()->getParameter('kernel.root_dir');
+        $rootDir = $this->input->getOption('export-path') ? $this->input->getOption('export-path') . '/' : $this->getContainer()->getParameter('kernel.project_dir');
 
         $this->output->writeln(sprintf('<info># Exporting "%s/%s":</info>', $file->getPath(), $file->getName()));
         $override = $this->input->getOption('override');
@@ -122,7 +123,7 @@ class ExportTranslationsCommand extends Command
 
         $format = $this->input->getOption('format') ? $this->input->getOption('format') : $file->getExtention();
 
-        // we don't write vendors file, translations will be exported in %kernel.root_dir%/Resources/translations
+        // we don't write vendors file, translations will be exported in %kernel.project_dir%/Resources/translations
         if (false !== strpos($file->getPath(), 'vendor/') || $override) {
             $outputPath = sprintf('%s/Resources/translations', $rootDir);
         } else {
@@ -134,7 +135,7 @@ class ExportTranslationsCommand extends Command
         // ensure the path exists
         if ($this->input->getOption('export-path')) {
             /** @var Filesystem $fs */
-            $fs = $this->getContainer()->get('filesystem');
+            $fs = $this->container->get('filesystem');
             if (!$fs->exists($outputPath)) {
                 $fs->mkdir($outputPath);
             }
@@ -159,7 +160,7 @@ class ExportTranslationsCommand extends Command
     {
         if (file_exists($outputFile)) {
             $extension = pathinfo($outputFile, PATHINFO_EXTENSION);
-            $loader = $this->getContainer()->get('lexik_translation.translator')->getLoader($extension);
+            $loader = $this->container->get('lexik_translation.translator')->getLoader($extension);
             $messageCatalogue = $loader->load($outputFile, $file->getLocale(), $file->getDomain());
 
             $translations = array_merge($messageCatalogue->all($file->getDomain()), $translations);
@@ -181,7 +182,7 @@ class ExportTranslationsCommand extends Command
         $this->output->write(sprintf('<comment>%d translations to export: </comment>', count($translations)));
 
         try {
-            $exported = $this->getContainer()->get('lexik_translation.exporter_collector')->export(
+            $exported = $this->container->get('lexik_translation.exporter_collector')->export(
                 $format,
                 $outputFile,
                 $translations
