@@ -4,8 +4,8 @@ namespace Lexik\Bundle\TranslationBundle\EventDispatcher;
 
 use Lexik\Bundle\TranslationBundle\Manager\LocaleManager;
 use Lexik\Bundle\TranslationBundle\Storage\StorageInterface;
-use Symfony\Component\HttpKernel\Event\GetResponseEvent;
-use Symfony\Component\Translation\TranslatorInterface;
+use Symfony\Component\HttpKernel\Event\RequestEvent;
+use Symfony\Contracts\Translation\TranslatorInterface;
 use Symfony\Component\Finder\Finder;
 
 /**
@@ -59,7 +59,7 @@ class CleanTranslationCacheListener
     /**
      * @param GetResponseEvent $event
      */
-    public function onKernelRequest(GetResponseEvent $event)
+    public function onKernelRequest(RequestEvent $event)
     {
         if ($event->isMasterRequest() && $this->isCacheExpired()) {
             $lastUpdateTime = $this->storage->getLatestUpdatedAt();
@@ -80,10 +80,10 @@ class CleanTranslationCacheListener
     }
 
     /**
-    * Checks if cache has expired
-    *
-    * @return boolean
-    */
+     * Checks if cache has expired
+     *
+     * @return boolean
+     */
     private function isCacheExpired()
     {
         if (empty($this->cacheInterval)) {
@@ -98,7 +98,7 @@ class CleanTranslationCacheListener
         }
         if (!\is_dir($cache_dir)) {
             \mkdir($cache_dir);
-        }        
+        }
         if (!\file_exists($cache_file)) {
             \touch($cache_file);
             return true;
